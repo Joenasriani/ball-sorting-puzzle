@@ -1,7 +1,7 @@
 
 >> https://joenasriani.github.io/ball-sorting-puzzle/
 >> 
->> https://joenasr.itch.io/the-ascension-game
+>> https://joenasr.itch.io/ball-sort-3d
 >> 
 BALL SORT 3D
 
