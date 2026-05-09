@@ -7,9 +7,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #0f172a; font-family: sans-serif; }
-        canvas { display: block; }
+        html, body { width: 100%; height: 100%; }
+        body { margin: 0; overflow: hidden; background-color: #0f172a; font-family: sans-serif; overscroll-behavior: none; }
+        canvas { display: block; touch-action: none; }
         .glass { background: rgba(30, 41, 59, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(71, 85, 105, 0.5); }
+        .safe-top { padding-top: max(0.75rem, env(safe-area-inset-top)); }
+        .safe-bottom { padding-bottom: max(1.5rem, env(safe-area-inset-bottom)); }
         @keyframes float {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
@@ -19,65 +22,68 @@
 </head>
 <body class="text-white">
 
-    <div id="game-container" class="w-full h-screen transition-opacity duration-1000 opacity-30"></div>
+    <div id="game-container" class="w-full h-[100dvh] transition-opacity duration-1000 opacity-30"></div>
 
-    <div id="hud" class="absolute top-0 left-0 w-full p-4 flex justify-between items-center pointer-events-none hidden">
-        <div class="glass p-3 rounded-2xl pointer-events-auto">
-            <h1 id="level-display" class="text-xl font-bold tracking-tight">Level 1</h1>
-            <p class="text-xs text-slate-400">Sort all colors to win</p>
+    <div id="hud" class="absolute top-0 left-0 w-full safe-top px-3 sm:px-4 flex flex-wrap justify-between items-start gap-3 pointer-events-none hidden">
+        <div class="glass px-3 py-2 sm:p-3 rounded-2xl pointer-events-auto min-w-0 max-w-[55vw] sm:max-w-none">
+            <h1 id="level-display" class="text-lg sm:text-xl font-bold tracking-tight truncate">Level 1</h1>
+            <p class="text-[11px] sm:text-xs text-slate-400 leading-tight">Sort all colors to win</p>
         </div>
         
-        <div class="flex gap-2 pointer-events-auto">
-            <button id="sound-toggle" onclick="toggleSound()" class="p-3 glass rounded-2xl transition-all active:scale-95 hover:bg-slate-700">
+        <div class="flex flex-wrap justify-end gap-2 pointer-events-auto">
+            <button id="undo-button" onclick="undoMove()" class="p-2.5 sm:p-3 glass rounded-2xl transition-all active:scale-95 hover:bg-slate-700 disabled:opacity-35 disabled:pointer-events-none" disabled aria-label="Undo last move">
+                <i data-lucide="undo-2" class="w-5 h-5"></i>
+            </button>
+            <button id="sound-toggle" onclick="toggleSound()" class="p-2.5 sm:p-3 glass rounded-2xl transition-all active:scale-95 hover:bg-slate-700" aria-label="Toggle sound">
                 <i data-lucide="volume-2" class="w-5 h-5"></i>
             </button>
-            <button onclick="restartLevel()" class="p-3 glass rounded-2xl transition-all active:scale-95 hover:bg-slate-700">
+            <button onclick="restartLevel()" class="p-2.5 sm:p-3 glass rounded-2xl transition-all active:scale-95 hover:bg-slate-700" aria-label="Restart level">
                 <i data-lucide="refresh-cw" class="w-5 h-5"></i>
             </button>
-            <div class="px-4 py-2 bg-yellow-500/20 text-yellow-500 border border-yellow-500/30 backdrop-blur-md rounded-2xl flex items-center gap-2">
+            <div class="px-3 sm:px-4 py-2 bg-yellow-500/20 text-yellow-500 border border-yellow-500/30 backdrop-blur-md rounded-2xl flex items-center gap-2">
                 <i data-lucide="trophy" class="w-4 h-4"></i>
                 <span id="score-display" class="font-bold">0</span>
             </div>
         </div>
     </div>
 
-    <div id="menu" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/40 backdrop-blur-sm p-6 text-center">
-        <div class="w-24 h-24 bg-blue-600 rounded-3xl flex items-center justify-center mb-6 shadow-2xl shadow-blue-500/20 animate-float">
-            <div class="w-12 h-12 border-4 border-white rounded-full"></div>
+    <div id="menu" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-950/40 backdrop-blur-sm p-4 sm:p-6 text-center safe-bottom">
+        <div class="w-20 h-20 sm:w-24 sm:h-24 bg-blue-600 rounded-3xl flex items-center justify-center mb-5 sm:mb-6 shadow-2xl shadow-blue-500/20 animate-float">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 border-4 border-white rounded-full"></div>
         </div>
-        <h1 class="text-5xl font-black mb-2 tracking-tighter italic">BALL SORT 3D</h1>
-        <p class="text-slate-400 max-w-xs mb-10 leading-relaxed">
+        <h1 class="text-4xl sm:text-5xl md:text-6xl font-black mb-2 tracking-tighter italic leading-none">BALL SORT 3D</h1>
+        <p class="text-slate-400 max-w-xs sm:max-w-sm mb-8 sm:mb-10 leading-relaxed text-sm sm:text-base">
             The ultimate color matching puzzle. Relaxing, challenging, and super 3D.
         </p>
-        <button onclick="startGame()" class="group flex items-center gap-3 px-10 py-5 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold text-xl transition-all hover:scale-105 active:scale-95 shadow-xl shadow-blue-600/30">
+        <button onclick="startGame()" class="group flex items-center gap-3 px-8 sm:px-10 py-4 sm:py-5 bg-blue-600 hover:bg-blue-500 text-white rounded-full font-bold text-lg sm:text-xl transition-all hover:scale-105 active:scale-95 shadow-xl shadow-blue-600/30">
             <i data-lucide="play" class="fill-current"></i>
             START GAME
         </button>
-        <p class="mt-8 text-xs text-slate-500 flex items-center gap-1 uppercase tracking-widest">
+        <p class="mt-6 sm:mt-8 text-[11px] sm:text-xs text-slate-500 flex items-center justify-center gap-1 uppercase tracking-widest max-w-[90vw]">
             <i data-lucide="help-circle" class="w-3.5 h-3.5"></i> Tap a tube to move its top ball
         </p>
     </div>
 
-    <div id="win-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-md p-6 hidden">
-        <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-[2.5rem] p-8 text-center shadow-2xl">
-            <div class="w-20 h-20 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <i data-lucide="trophy" class="w-10 h-10"></i>
+    <div id="win-modal" class="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/60 backdrop-blur-md p-4 sm:p-6 hidden">
+        <div class="bg-slate-900 border border-slate-700 w-full max-w-sm rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-8 text-center shadow-2xl">
+            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-yellow-500/20 text-yellow-500 border border-yellow-500/30 rounded-full flex items-center justify-center mx-auto mb-5 sm:mb-6">
+                <i data-lucide="trophy" class="w-9 h-9 sm:w-10 sm:h-10"></i>
             </div>
-            <h2 class="text-3xl font-black mb-2">WELL DONE!</h2>
-            <p class="text-slate-400 mb-8">You successfully sorted the level.</p>
+            <h2 class="text-2xl sm:text-3xl font-black mb-2">WELL DONE!</h2>
+            <p class="text-slate-400 mb-6 sm:mb-8 text-sm sm:text-base">You successfully sorted the level.</p>
             
-            <div class="grid grid-cols-2 gap-4">
-               <button onclick="restartLevel()" class="py-4 px-6 bg-slate-800 hover:bg-slate-700 rounded-2xl font-bold transition-all">
+            <div class="grid grid-cols-2 gap-3 sm:gap-4">
+               <button onclick="restartLevel()" class="py-3 sm:py-4 px-4 sm:px-6 bg-slate-800 hover:bg-slate-700 rounded-2xl font-bold transition-all">
                 REPLAY
               </button>
-              <button onclick="nextLevel()" class="py-4 px-6 bg-blue-600 hover:bg-blue-500 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/20">
+              <button onclick="nextLevel()" class="py-3 sm:py-4 px-4 sm:px-6 bg-blue-600 hover:bg-blue-500 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-600/20">
                 NEXT <i data-lucide="chevron-right" class="w-5 h-5"></i>
               </button>
             </div>
         </div>
     </div>
 
-    <div id="hint-text" class="absolute bottom-10 left-1/2 -translate-x-1/2 pointer-events-none opacity-50 text-sm font-medium hidden">
+    <div id="hint-text" class="absolute bottom-6 sm:bottom-10 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] text-center pointer-events-none opacity-60 text-sm font-medium hidden safe-bottom">
         Tap a tube to pick up a ball
     </div>
 
@@ -97,46 +103,123 @@
         class AudioEngine {
             constructor() {
                 this.ctx = null;
-                this.soundEnabled = true; 
-                this.gainNode = null;
+                this.soundEnabled = true;
+                this.masterGain = null;
+                this.compressor = null;
+                this.delay = null;
+                this.delayGain = null;
             }
 
             async init() {
                 if (!this.ctx) {
                     this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-                    this.gainNode = this.ctx.createGain();
-                    this.gainNode.gain.value = 0.08; 
-                    this.gainNode.connect(this.ctx.destination);
+                    this.masterGain = this.ctx.createGain();
+                    this.masterGain.gain.value = 0.18;
+
+                    this.compressor = this.ctx.createDynamicsCompressor();
+                    this.compressor.threshold.value = -24;
+                    this.compressor.knee.value = 18;
+                    this.compressor.ratio.value = 6;
+                    this.compressor.attack.value = 0.006;
+                    this.compressor.release.value = 0.22;
+
+                    this.delay = this.ctx.createDelay(0.35);
+                    this.delay.delayTime.value = 0.055;
+                    this.delayGain = this.ctx.createGain();
+                    this.delayGain.gain.value = 0.07;
+
+                    this.delay.connect(this.delayGain);
+                    this.delayGain.connect(this.masterGain);
+                    this.masterGain.connect(this.compressor);
+                    this.compressor.connect(this.ctx.destination);
                 }
                 if (this.ctx.state === 'suspended') {
                     await this.ctx.resume();
                 }
             }
 
-            playSfx(freq, type = 'sine', duration = 0.1, ramp = true) {
+            triggerTone({
+                freq = 440,
+                endFreq = null,
+                type = 'sine',
+                duration = 0.16,
+                gain = 0.12,
+                attack = 0.008,
+                release = 0.08,
+                delaySend = 0.18,
+                filterHz = 5200,
+                detune = 0,
+                startOffset = 0
+            } = {}) {
                 if (!this.soundEnabled || !this.ctx || this.ctx.state !== 'running') return;
+
+                const now = this.ctx.currentTime + startOffset;
                 const osc = this.ctx.createOscillator();
-                const g = this.ctx.createGain();
+                const amp = this.ctx.createGain();
+                const filter = this.ctx.createBiquadFilter();
+                const wetGain = this.ctx.createGain();
+
                 osc.type = type;
-                osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                if (ramp) osc.frequency.exponentialRampToValueAtTime(freq / 2, this.ctx.currentTime + duration);
-                
-                g.gain.setValueAtTime(0.1, this.ctx.currentTime);
-                g.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
-                
-                osc.connect(g);
-                g.connect(this.gainNode);
-                osc.start();
-                osc.stop(this.ctx.currentTime + duration);
+                osc.frequency.setValueAtTime(freq, now);
+                osc.detune.setValueAtTime(detune, now);
+                if (endFreq && endFreq > 0) {
+                    osc.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
+                }
+
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(filterHz, now);
+                filter.Q.value = 0.45;
+
+                amp.gain.setValueAtTime(0.0001, now);
+                amp.gain.exponentialRampToValueAtTime(Math.max(gain, 0.001), now + attack);
+                amp.gain.exponentialRampToValueAtTime(0.0001, now + duration + release);
+
+                wetGain.gain.setValueAtTime(delaySend, now);
+
+                osc.connect(filter);
+                filter.connect(amp);
+                amp.connect(this.masterGain);
+                amp.connect(wetGain);
+                wetGain.connect(this.delay);
+
+                osc.start(now);
+                osc.stop(now + duration + release + 0.03);
             }
 
-            playSelect() { this.playSfx(600, 'sine', 0.15); }
-            playDrop() { this.playSfx(400, 'sine', 0.2); }
-            playInvalid() { this.playSfx(150, 'triangle', 0.3); }
+            playSelect() {
+                this.triggerTone({ freq: 740, endFreq: 880, type: 'sine', duration: 0.09, gain: 0.095, filterHz: 6200, delaySend: 0.12 });
+                this.triggerTone({ freq: 1110, endFreq: 1320, type: 'sine', duration: 0.075, gain: 0.045, filterHz: 7200, delaySend: 0.2, startOffset: 0.018 });
+            }
+
+            playDrop() {
+                this.triggerTone({ freq: 392, endFreq: 294, type: 'triangle', duration: 0.18, gain: 0.11, filterHz: 2600, delaySend: 0.08 });
+                this.triggerTone({ freq: 196, endFreq: 174, type: 'sine', duration: 0.2, gain: 0.055, filterHz: 1400, delaySend: 0.04 });
+            }
+
+            playInvalid() {
+                this.triggerTone({ freq: 220, endFreq: 165, type: 'triangle', duration: 0.22, gain: 0.085, filterHz: 900, delaySend: 0.02 });
+                this.triggerTone({ freq: 147, endFreq: 124, type: 'sine', duration: 0.2, gain: 0.045, filterHz: 700, delaySend: 0.01, startOffset: 0.025 });
+            }
+
+            playUndo() {
+                this.triggerTone({ freq: 330, endFreq: 494, type: 'sine', duration: 0.16, gain: 0.075, filterHz: 4400, delaySend: 0.18 });
+                this.triggerTone({ freq: 660, endFreq: 740, type: 'sine', duration: 0.12, gain: 0.04, filterHz: 6400, delaySend: 0.2, startOffset: 0.035 });
+            }
+
             playWin() {
-                [440, 554, 659].forEach((f, i) => {
-                    setTimeout(() => this.playSfx(f, 'sine', 0.5, false), i * 100);
+                [523.25, 659.25, 783.99, 1046.5].forEach((freq, i) => {
+                    this.triggerTone({
+                        freq,
+                        endFreq: freq * 1.015,
+                        type: 'sine',
+                        duration: 0.34,
+                        gain: i === 3 ? 0.105 : 0.08,
+                        filterHz: 6800,
+                        delaySend: 0.26,
+                        startOffset: i * 0.105
+                    });
                 });
+                this.triggerTone({ freq: 261.63, endFreq: 261.63, type: 'triangle', duration: 0.52, gain: 0.045, filterHz: 1800, delaySend: 0.12, startOffset: 0.04 });
             }
         }
 
@@ -144,21 +227,31 @@
 
         const BALL_RADIUS = 0.4;
         const TUBE_HEIGHT = 5.5;
-        const COLORS = ['#ef4444', '#3b82f6', '#eab308', '#ec4899', '#8b5cf6', '#10b981', '#f97316'];
+        const BALL_STACK_SPACING = BALL_RADIUS * 2.1;
+        const COLORS = [
+            '#ef4444', '#3b82f6', '#eab308', '#ec4899', '#8b5cf6',
+            '#10b981', '#f97316', '#06b6d4', '#f8fafc', '#a3e635'
+        ];
         const LEVELS = [
-            { tubes: 3, ballsPerTube: 3, colors: 2 },
-            { tubes: 4, ballsPerTube: 4, colors: 3 },
-            { tubes: 5, ballsPerTube: 4, colors: 4 },
-            { tubes: 6, ballsPerTube: 4, colors: 5 },
-            { tubes: 7, ballsPerTube: 4, colors: 6 }
+            { tubes: 3, ballsPerTube: 3, colors: 2, scrambleMoves: 10, minimumMixedTubes: 2 },
+            { tubes: 4, ballsPerTube: 4, colors: 3, scrambleMoves: 18, minimumMixedTubes: 2 },
+            { tubes: 5, ballsPerTube: 4, colors: 4, scrambleMoves: 26, minimumMixedTubes: 3 },
+            { tubes: 6, ballsPerTube: 4, colors: 5, scrambleMoves: 34, minimumMixedTubes: 4 },
+            { tubes: 7, ballsPerTube: 4, colors: 6, scrambleMoves: 42, minimumMixedTubes: 5 },
+            { tubes: 8, ballsPerTube: 4, colors: 6, scrambleMoves: 52, minimumMixedTubes: 5 },
+            { tubes: 8, ballsPerTube: 5, colors: 6, scrambleMoves: 62, minimumMixedTubes: 5 },
+            { tubes: 9, ballsPerTube: 5, colors: 7, scrambleMoves: 74, minimumMixedTubes: 6 },
+            { tubes: 10, ballsPerTube: 5, colors: 8, scrambleMoves: 88, minimumMixedTubes: 7 },
+            { tubes: 11, ballsPerTube: 5, colors: 9, scrambleMoves: 104, minimumMixedTubes: 8 }
         ];
 
-        let scene, camera, renderer, controls;
+        let scene, camera, renderer, controls, floor;
         let tubeMeshes = [];
         let ballMeshes = [];
         let tubesData = [];
         let selectedTubeIndex = null;
         let animationQueue = [];
+        let undoStack = [];
         let level = 0;
         let score = 0;
         let isPlaying = false;
@@ -174,7 +267,7 @@
             camera.position.set(0, 6, 12);
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
             renderer.shadowMap.enabled = true;
             document.getElementById('game-container').appendChild(renderer.domElement);
 
@@ -191,54 +284,249 @@
             dirLight.castShadow = true;
             scene.add(dirLight);
 
-            const floorGeo = new THREE.BoxGeometry(15, 0.2, 8);
+            const floorGeo = new THREE.BoxGeometry(1, 0.2, 8);
             const floorMat = new THREE.MeshStandardMaterial({ color: '#1e293b' });
-            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor = new THREE.Mesh(floorGeo, floorMat);
             floor.position.y = -0.1;
             floor.receiveShadow = true;
             scene.add(floor);
 
             window.addEventListener('resize', onWindowResize);
-            window.addEventListener('click', onInteraction);
-            window.addEventListener('touchstart', onInteraction);
+            window.addEventListener('pointerdown', onInteraction, { passive: false });
             animate();
         }
 
         function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
+            camera.fov = window.innerWidth < 640 ? 60 : 50;
             camera.updateProjectionMatrix();
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
             renderer.setSize(window.innerWidth, window.innerHeight);
+            fitCameraToLevel();
+        }
+
+        function cloneTubesData() {
+            return tubesData.map(tube => [...tube]);
+        }
+
+        function updateUndoButton() {
+            const btn = document.getElementById('undo-button');
+            if (!btn) return;
+            btn.disabled = undoStack.length === 0 || animationQueue.length > 0;
+        }
+
+        function getLevelWidth() {
+            if (!tubesData.length) return 8;
+            const spacing = getTubeSpacing();
+            return Math.max(6, (tubesData.length - 1) * spacing + 2.8);
+        }
+
+        function getTubeSpacing() {
+            if (tubesData.length >= 10) return 1.85;
+            if (tubesData.length >= 8) return 2.0;
+            return 2.2;
+        }
+
+        function updateFloorSize() {
+            if (!floor) return;
+            const floorWidth = Math.max(15, getLevelWidth() + 3);
+            floor.scale.set(floorWidth, 1, 1);
+        }
+
+        function fitCameraToLevel() {
+            if (!camera || !controls || !tubesData.length) return;
+            updateFloorSize();
+            const levelWidth = getLevelWidth();
+            const aspect = Math.max(0.45, window.innerWidth / Math.max(1, window.innerHeight));
+            const verticalFov = THREE.MathUtils.degToRad(camera.fov);
+            const horizontalFov = 2 * Math.atan(Math.tan(verticalFov / 2) * aspect);
+            const requiredZ = levelWidth / (2 * Math.tan(horizontalFov / 2)) + 4.5;
+            camera.position.z = THREE.MathUtils.clamp(requiredZ, 10, 32);
+            camera.position.y = aspect < 0.75 ? 7.8 : 6.2;
+            controls.target.set(0, 2.45, 0);
+            controls.maxDistance = 36;
+            controls.update();
+        }
+
+        function createSolvedTubes(config) {
+            const { tubes, ballsPerTube, colors } = config;
+            const solved = Array.from({ length: tubes }, () => []);
+            for (let c = 0; c < colors; c++) {
+                solved[c] = Array.from({ length: ballsPerTube }, () => c);
+            }
+            return solved;
+        }
+
+        function cloneTubesState(state) {
+            return state.map(tube => [...tube]);
+        }
+
+        function isSolvedState(state, config) {
+            return state.every(tube => {
+                if (tube.length === 0) return true;
+                if (tube.length !== config.ballsPerTube) return false;
+                return tube.every(color => color === tube[0]);
+            });
+        }
+
+        function canApplyPlayerMove(state, fromIdx, toIdx, config) {
+            if (fromIdx === toIdx) return false;
+            const fromTube = state[fromIdx];
+            const toTube = state[toIdx];
+            if (!fromTube || !toTube || fromTube.length === 0) return false;
+            if (toTube.length >= config.ballsPerTube) return false;
+            const ballColor = fromTube[fromTube.length - 1];
+            return toTube.length === 0 || toTube[toTube.length - 1] === ballColor;
+        }
+
+        function applyStateMove(state, fromIdx, toIdx) {
+            const ball = state[fromIdx].pop();
+            state[toIdx].push(ball);
+            return ball;
+        }
+
+        function validatePhysicalState(state, config) {
+            if (state.length !== config.tubes) return false;
+            const colorCounts = new Map();
+            for (const tube of state) {
+                if (tube.length > config.ballsPerTube) return false;
+                const highestBallCenter = tube.length > 0 ? (tube.length - 1) * BALL_STACK_SPACING + BALL_RADIUS : 0;
+                if (highestBallCenter + BALL_RADIUS > TUBE_HEIGHT - 0.15) return false;
+                for (const color of tube) {
+                    if (color < 0 || color >= config.colors || color >= COLORS.length) return false;
+                    colorCounts.set(color, (colorCounts.get(color) || 0) + 1);
+                }
+            }
+            for (let color = 0; color < config.colors; color++) {
+                if (colorCounts.get(color) !== config.ballsPerTube) return false;
+            }
+            return true;
+        }
+
+        function validateSolutionPath(startState, solutionMoves, config) {
+            if (!validatePhysicalState(startState, config)) return false;
+            const testState = cloneTubesState(startState);
+            for (const move of solutionMoves) {
+                if (!canApplyPlayerMove(testState, move.from, move.to, config)) return false;
+                applyStateMove(testState, move.from, move.to);
+                if (!validatePhysicalState(testState, config)) return false;
+            }
+            return isSolvedState(testState, config);
+        }
+
+        function countMixedTubes(state) {
+            return state.reduce((count, tube) => {
+                if (tube.length < 2) return count;
+                return new Set(tube).size > 1 ? count + 1 : count;
+            }, 0);
+        }
+
+        function getReverseScrambleCandidates(state, config, previousMove) {
+            const candidates = [];
+            state.forEach((fromTube, fromIdx) => {
+                if (fromTube.length === 0) return;
+                const ballColor = fromTube[fromTube.length - 1];
+                const colorBelow = fromTube.length > 1 ? fromTube[fromTube.length - 2] : null;
+
+                // Only lift from a clean top stack. This guarantees the inverse player move
+                // can legally put the ball back onto the original tube later.
+                if (colorBelow !== null && colorBelow !== ballColor) return;
+
+                state.forEach((toTube, toIdx) => {
+                    if (toIdx === fromIdx || toTube.length >= config.ballsPerTube) return;
+                    if (previousMove && previousMove.from === toIdx && previousMove.to === fromIdx) return;
+
+                    const targetTop = toTube.length ? toTube[toTube.length - 1] : null;
+                    const createsMix = targetTop !== null && targetTop !== ballColor;
+                    const weight = createsMix ? 4 : 1;
+                    candidates.push({ from: fromIdx, to: toIdx, weight });
+                });
+            });
+            return candidates;
+        }
+
+        function pickWeightedMove(candidates) {
+            const total = candidates.reduce((sum, candidate) => sum + candidate.weight, 0);
+            let roll = Math.random() * total;
+            for (const candidate of candidates) {
+                roll -= candidate.weight;
+                if (roll <= 0) return candidate;
+            }
+            return candidates[candidates.length - 1];
+        }
+
+        function buildGuaranteedSolvableLevel(config, scrambleMoves) {
+            const state = createSolvedTubes(config);
+            const solutionMoves = [];
+            let previousMove = null;
+
+            for (let step = 0; step < scrambleMoves; step++) {
+                const candidates = getReverseScrambleCandidates(state, config, previousMove);
+                if (candidates.length === 0) break;
+
+                const move = pickWeightedMove(candidates);
+                applyStateMove(state, move.from, move.to);
+
+                // Store the exact legal player move needed to reverse this scramble step.
+                solutionMoves.unshift({ from: move.to, to: move.from });
+                previousMove = move;
+            }
+
+            return { state, solutionMoves };
         }
 
         function generateLevelData(idx) {
             const config = LEVELS[idx % LEVELS.length];
-            const { tubes, ballsPerTube, colors } = config;
-            let pool = [];
-            for (let c = 0; c < colors; c++) {
-                for (let b = 0; b < ballsPerTube; b++) pool.push(c);
+            const repeatCycle = Math.floor(idx / LEVELS.length);
+            const targetScrambleMoves = config.scrambleMoves + repeatCycle * 10;
+            const minimumMixedTubes = Math.min(config.minimumMixedTubes, Math.max(1, config.colors));
+            let bestCandidate = null;
+            let bestScore = -1;
+
+            for (let attempt = 0; attempt < 180; attempt++) {
+                const extraScramble = Math.floor(attempt / 45) * 4;
+                const candidate = buildGuaranteedSolvableLevel(config, targetScrambleMoves + extraScramble);
+                const mixedTubes = countMixedTubes(candidate.state);
+                const candidateScore = mixedTubes * 100 + candidate.solutionMoves.length;
+                const verified = !isSolvedState(candidate.state, config) && validateSolutionPath(candidate.state, candidate.solutionMoves, config);
+
+                if (verified && candidateScore > bestScore) {
+                    bestCandidate = candidate;
+                    bestScore = candidateScore;
+                }
+
+                if (verified && mixedTubes >= minimumMixedTubes) {
+                    return cloneTubesState(candidate.state);
+                }
             }
-            for (let i = pool.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [pool[i], pool[j]] = [pool[j], pool[i]];
+
+            // Defensive fallback: return the best proof-backed board, never a blind shuffle.
+            if (bestCandidate && validateSolutionPath(bestCandidate.state, bestCandidate.solutionMoves, config)) {
+                return cloneTubesState(bestCandidate.state);
             }
-            const newTubes = Array.from({ length: tubes }, () => []);
-            for (let i = 0; i < pool.length; i++) {
-                const tIdx = Math.floor(i / ballsPerTube);
-                newTubes[tIdx].push(pool[i]);
-            }
-            return newTubes;
+
+            // Final emergency fallback is solved and valid, so the game never creates an impossible board.
+            return createSolvedTubes(config);
         }
 
         function setupLevel() {
-            tubeMeshes.forEach(m => scene.remove(m.parent));
+            tubesData = generateLevelData(level);
+            selectedTubeIndex = null;
+            animationQueue = [];
+            undoStack = [];
+            renderLevelFromData();
+            updateUndoButton();
+        }
+
+        function renderLevelFromData() {
+            tubeMeshes.forEach(m => {
+                if (m.parent) scene.remove(m.parent);
+            });
             ballMeshes.forEach(m => scene.remove(m));
             tubeMeshes = [];
             ballMeshes = [];
-            selectedTubeIndex = null;
-            animationQueue = [];
 
-            tubesData = generateLevelData(level);
-            const spacing = 2.2;
+            const spacing = getTubeSpacing();
             const offset = ((tubesData.length - 1) * spacing) / 2;
 
             tubesData.forEach((contents, i) => {
@@ -264,7 +552,7 @@
 
                 contents.forEach((colorIdx, ballIdx) => {
                     const ball = createBall(COLORS[colorIdx]);
-                    ball.position.set(i * spacing - offset, ballIdx * (BALL_RADIUS * 2.1) + BALL_RADIUS, 0);
+                    ball.position.set(i * spacing - offset, ballIdx * BALL_STACK_SPACING + BALL_RADIUS, 0);
                     ball.userData = { colorIdx, tubeIdx: i };
                     scene.add(ball);
                     ballMeshes.push(ball);
@@ -272,6 +560,7 @@
             });
             document.getElementById('level-display').innerText = `Level ${level + 1}`;
             document.getElementById('score-display').innerText = score;
+            fitCameraToLevel();
         }
 
         function createBall(color) {
@@ -283,10 +572,12 @@
         }
 
         async function onInteraction(e) {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            e.preventDefault();
             await audio.init(); 
             if (!isPlaying || animationQueue.length > 0) return;
-            const x = e.clientX || (e.touches && e.touches[0].clientX);
-            const y = e.clientY || (e.touches && e.touches[0].clientY);
+            const x = e.clientX;
+            const y = e.clientY;
             mouse.x = (x / window.innerWidth) * 2 - 1;
             mouse.y = -(y / window.innerHeight) * 2 + 1;
             raycaster.setFromCamera(mouse, camera);
@@ -323,10 +614,12 @@
                                     (toTube.length === 0 || toTube[toTube.length - 1] === ballColor);
                     if (canMove) {
                         audio.playDrop();
+                        undoStack.push(cloneTubesData());
                         const ball = fromTube.pop();
                         toTube.push(ball);
                         animateBallTransition(fromIdx, toIdx);
                         selectedTubeIndex = null;
+                        updateUndoButton();
                     } else {
                         audio.playInvalid();
                         moveBallVisual(fromIdx, 'down');
@@ -337,21 +630,37 @@
             updateHint();
         }
 
+        function undoMoveInternal() {
+            if (!isPlaying || animationQueue.length > 0) return;
+            if (undoStack.length === 0) {
+                audio.playInvalid();
+                return;
+            }
+            document.getElementById('win-modal').classList.add('hidden');
+            selectedTubeIndex = null;
+            animationQueue = [];
+            tubesData = undoStack.pop();
+            renderLevelFromData();
+            updateUndoButton();
+            updateHint();
+            audio.playUndo();
+        }
+
         function moveBallVisual(tubeIdx, direction) {
             const balls = ballMeshes.filter(b => b.userData.tubeIdx === tubeIdx);
             if (balls.length === 0) return;
             const topBall = balls.reduce((a, b) => a.position.y > b.position.y ? a : b);
-            const targetY = direction === 'up' ? TUBE_HEIGHT + 0.5 : (tubesData[tubeIdx].length - 1) * (BALL_RADIUS * 2.1) + BALL_RADIUS;
+            const targetY = direction === 'up' ? TUBE_HEIGHT + 0.5 : (tubesData[tubeIdx].length - 1) * BALL_STACK_SPACING + BALL_RADIUS;
             animationQueue.push({ mesh: topBall, target: new THREE.Vector3(topBall.position.x, targetY, 0) });
         }
 
         function animateBallTransition(fromIdx, toIdx) {
             const balls = ballMeshes.filter(b => b.userData.tubeIdx === fromIdx);
             const topBall = balls.reduce((a, b) => a.position.y > b.position.y ? a : b);
-            const spacing = 2.2;
+            const spacing = getTubeSpacing();
             const offset = ((tubesData.length - 1) * spacing) / 2;
             const targetX = toIdx * spacing - offset;
-            const targetY = (tubesData[toIdx].length - 1) * (BALL_RADIUS * 2.1) + BALL_RADIUS;
+            const targetY = (tubesData[toIdx].length - 1) * BALL_STACK_SPACING + BALL_RADIUS;
             animationQueue.push({ mesh: topBall, target: new THREE.Vector3(topBall.position.x, TUBE_HEIGHT + 0.8, 0) });
             animationQueue.push({ mesh: topBall, target: new THREE.Vector3(targetX, TUBE_HEIGHT + 0.8, 0) });
             animationQueue.push({ mesh: topBall, target: new THREE.Vector3(targetX, targetY, 0) });
@@ -367,7 +676,10 @@
                 if (anim.mesh.position.distanceTo(anim.target) < 0.05) {
                     anim.mesh.position.copy(anim.target);
                     animationQueue.shift();
-                    if (animationQueue.length === 0) checkWin();
+                    if (animationQueue.length === 0) {
+                        updateUndoButton();
+                        checkWin();
+                    }
                 }
             }
             renderer.render(scene, camera);
@@ -426,6 +738,11 @@
             
             const btn = document.getElementById('sound-toggle');
             if (audio.soundEnabled) btn.classList.add('bg-blue-600/30', 'text-blue-400');
+        };
+
+        window.undoMove = async () => {
+            await audio.init();
+            undoMoveInternal();
         };
 
         window.restartLevel = () => {
